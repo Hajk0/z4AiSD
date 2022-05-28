@@ -2,6 +2,9 @@
 #include <vector>
 #include <bits/stdc++.h>
 #include <fstream>
+#include <cstdlib>
+#include <ctime>
+
 
 using namespace std;
 
@@ -18,6 +21,9 @@ void undirectedEuler(int **macierzSasiedztwa,int V);
 int cinInt();
 int cinV(int V);
 
+vector<vector<int>> generateSuccessorsList(int V, int saturation, vector<vector<int>> successors);
+
+
 
 int main()
 {
@@ -33,6 +39,7 @@ int main()
         cout << "1 - graf nieskierowany z klawiatury\t\t\t2 - graf nieskierowany z pliku\n3 - graf skierowany z klawiatury\t\t\t4 - graf skierowany z pliku\n";
         cout << "5 - znajdz cykl hamiltona dla grafu nieskierowanego\t6 - znajdz cykl hamiltona dla grafu skierowanego\n";
         cout << "7 - znajdz cykl eulera dla grafu nieskierowanego\t8 - znajdz cykl eulera dla grafu skierowanego\n";
+        cout << "9 - wygeneruj n% nasycony graf nieskierowany\t\t0 - wygeneruj n% nasycony graf skierowany\n";
         cout << "x - zakoncz dzialanie programu.\n";
         cin >> o;
 
@@ -173,22 +180,115 @@ int main()
         }
         case '5':
         {
+            clock_t start, stop;
+            double time;
+            start = clock();
             HcycleM(V, macierzSasiedztwa);
+            stop = clock();
+            time = (double)(stop - start)/CLOCKS_PER_SEC;
+            cout << "Czas dzialania: " << time << endl;
             break;
         }
         case '6':
         {
+            clock_t start, stop;
+            double time;
+            start = clock();
             HcycleS(V, successors);
+            stop = clock();
+            time = (double)(stop - start)/CLOCKS_PER_SEC;
+            cout << "Czas dzialania: " << time << endl;
             break;
         }
         case '7':
         {
+            clock_t start, stop;
+            double time;
+            start = clock();
             undirectedEuler(macierzSasiedztwa, V);
+            stop = clock();
+            time = (double)(stop - start)/CLOCKS_PER_SEC;
+            cout << "Czas dzialania: " << time << endl;
             break;
         }
         case '8':
         {
+            clock_t start, stop;
+            double time;
+            start = clock();
             DirectedEuler(successors);
+            stop = clock();
+            time = (double)(stop - start)/CLOCKS_PER_SEC;
+            cout << "Czas dzialania: " << time << endl;
+            break;
+        }
+        case '9':
+        {
+            cout << "Podaj liczbe wierzcholkow i stopien nasycenia grafu:\n";
+            V = cinInt();
+            int saturation = cinInt();
+            E = (saturation*V*(V-1))/200;
+            cout << E << endl;
+
+            macierzSasiedztwa = new int* [V];
+
+            for(int i=0; i<V; i++)
+            {
+                macierzSasiedztwa[i] = new int[V];
+                for(int j=0; j<V; j++)
+                {
+                    macierzSasiedztwa[i][j] = 0;
+                }
+            }
+
+            for(int i=0; i<E; i++)
+            {
+                do
+                {
+                    Vout = rand() % V;
+                    Vin = rand() % V;
+                }while(macierzSasiedztwa[Vin][Vout] == 1 || Vin == Vout);
+                macierzSasiedztwa[Vout][Vin] = 1;
+                macierzSasiedztwa[Vin][Vout] = 1;
+            }
+
+            visited = new bool[V];
+            for(int i=0; i<V; i++)
+            {
+                visited[i] = false;
+            }
+
+            cout<<"Macierz sasiedztwa:\n    ";
+            for(int i=0; i<V; i++)
+            {
+                cout<<i+1<<"|";
+            }
+            cout<<"\n   ";
+            for(int i=0; i<V*2; i++)
+            {
+                cout<<"_";
+            }
+            cout<<"\n";
+            for(int i=0; i<V; i++)
+            {
+                cout<<i+1<<"  |";
+                for(int j=0; j<V; j++)
+                {
+                    cout << macierzSasiedztwa[i][j] <<" ";
+                }
+                cout<<"\n";
+            }
+            cout<<"\n\n\n";
+            break;
+        }
+        case '0':
+        {
+            int saturation;
+            cout << "Podaj liczbe wierzcholkow oraz nasycenie grafu:\n";
+            cin >> V >> saturation;
+            E = (saturation*V*(V-1))/100;
+            vector<vector<int>> successorstmp(V);
+            successors = generateSuccessorsList(V, saturation, successorstmp);
             break;
         }
         case 'x':
@@ -242,6 +342,49 @@ vector<vector<int>> createSuccessorsListF(int V, int E, vector<vector<int>> succ
     return successors;
 }
 
+vector<vector<int>> generateSuccessorsList(int V, int saturation, vector<vector<int>> successors)
+{
+    int a, b;
+    bool e = 0;
+    cout << (saturation*V*(V-1))/100 << endl;
+    for(int i=0; i<(saturation*V*(V-1))/100; i++)
+    {
+        do
+        {
+            e = 0;
+            a = rand() % V;
+            b = rand() % V;
+            //cout << "\n" << a << ", " << b << "\n";
+
+            if(!successors[a].empty())
+            {
+                for(int j=0; j<successors[a].size(); j++)
+                {
+                    //cout << "cos";
+                    if(successors[a][j] == b)
+                    {
+                        e = 1;
+                        break;
+                    }
+                }
+            }
+
+        }while(e);
+
+        successors[a].push_back(b);
+    }
+    /*for(int i=0; i<V; i++)
+    {
+        cout << i << " -> ";
+        for(int j=0; j<successors[i].size(); j++)
+        {
+            cout << successors[i][j] << ", ";
+        }
+        cout << endl;
+    }*/
+    return successors;
+}
+
 vector<int> hamiltonianS(int V, int current, vector<vector<int>> successors, bool visited[], vector<int> path)
 {
     visited[current] = 1;
@@ -288,7 +431,7 @@ void HcycleS(int V, vector<vector<int>> successors)
         }
     }
 
-    if(cycle == 1)
+    /*if(cycle == 1)/// ////////////////////////////////////////
     {
         cout << "Znaleziony cykl hamiltona:\n";
         for(int i=0; i<path.size(); i++)
@@ -300,7 +443,7 @@ void HcycleS(int V, vector<vector<int>> successors)
     else
     {
         cout << "Graf wejsciowy nie zawiera cyklu hamiltona.\n";
-    }
+    }*/
 }
 
 vector<int> hamiltonianM(int V, int current, int **macierzSasiedztwa, bool visited[], vector<int> path)
@@ -481,6 +624,8 @@ void undirectedEuler(int **macierzSasiedztwa, int V)
     }
 }
 
+
+
 int cinInt()
 {
     int x;
@@ -504,3 +649,5 @@ int cinV(int V)
     }
     return x;
 }
+
+
